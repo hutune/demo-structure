@@ -1,183 +1,180 @@
-# ClickUp Integration - Complete Configuration
+# ClickUp Rules & Integration Configuration
 
-## Quick Start (Developers)
-
-```bash
-git clone https://github.com/hutune/demo-structure.git
-cd demo-structure
-git pull origin main
-# Edit files in _bmad-output/
-git add . && git commit -m "Update story" && git push
-# → ClickUp auto-syncs!
-```
+> **Đọc kỹ trước khi làm việc với ClickUp!**  
+> Tài liệu này mô tả cấu trúc workspace, statuses, và cách sync từ GitHub.
 
 ---
 
-## ClickUp Space Architecture
+## 1. Cấu Trúc Workspace
 
 ### Space: Development Team
 **ID**: `90189438827`
 
-### Folders Structure
+### Folders
 
-| Folder | ID | Purpose |
-|--------|-----|---------|
-| **Planning & Backlog** | `901811729589` | Epics và Product Backlog |
-| **Sprint** | `901811698066` | Sprint lists |
-| **Knowledge Base** | `901811729668` | Documentation |
-
-### Lists (Sync Target)
-
-| List | ID | Synced From |
-|------|-----|-------------|
-| **Epics / Initiatives** | `901815396322` | `_bmad-output/epics/*.md` |
-| **Product Backlog** | `901815396340` | `_bmad-output/stories/*.md` |
-| **Bug Triage** | `901815396345` | *(not synced)* |
-
-### Sprint Lists
-
-| Sprint | ID | Dates |
-|--------|-----|-------|
-| Sprint 1 | `901815360889` | 1/26 - 2/8 |
-| Sprint 2 | `901815360910` | 2/9 - 2/22 |
+| Folder | ID | Mục đích |
+|--------|-----|----------|
+| **Planning & Backlog** | `901811729589` | Quản lý Epics, Product Backlog, Bug Triage |
+| **Sprint** | `901811698066` | Sprint hiện tại và kế tiếp |
+| **Knowledge Base** | `901811729668` | Tài liệu, Tech Specs |
 
 ---
 
-## Status Mappings
+## 2. Lists & Statuses
 
-### Epics / Initiatives List
+### 📋 Epics / Initiatives
+**ID**: `901815396322`  
+**Sync từ**: `_bmad-output/epics/*.md`
 
-| Order | ClickUp Status | Type | Markdown Value |
-|-------|----------------|------|----------------|
+| Order | Status | Type | Markdown Value |
+|-------|--------|------|----------------|
 | 0 | `to do` | open | `to-do` |
 | 1 | `in progress` | custom | `in-progress` |
 | 2 | `complete` | done | `done` |
 | 3 | `cancelled` | closed | `cancelled` |
 
-### Product Backlog List
-
-| Order | ClickUp Status | Type | Markdown Value |
-|-------|----------------|------|----------------|
-| 0 | `Open` | open | `to-do` |
-| 1 | `scoping` | custom | `scoping` |
-| 2 | `in design` | custom | `in-design` |
-| 3 | `ready for dev` | custom | `in-progress` |
-| 4 | `cancelled` | closed | `done` |
-
-### Space-Level Statuses (Reference)
-
-Full list of statuses available at space level:
-- `backlog` → `scoping` → `in design` → `in development` → `in review` → `testing` → `ready for development` → `shipped` → `cancelled`
+**Rule**: Epics không bao giờ di chuyển vào Sprint. Chúng chỉ là container cho User Stories.
 
 ---
 
-## Markdown Frontmatter Format
+### 📝 Product Backlog
+**ID**: `901815396340`  
+**Sync từ**: `_bmad-output/stories/*.md`
 
-### Epic
+| Order | Status | Type | Markdown Value |
+|-------|--------|------|----------------|
+| 0 | `Open` | open | `to-do` |
+| 1 | `scoping` | custom | `scoping` |
+| 2 | `in design` | custom | `in-design` |
+| 3 | `ready for dev` | custom | `ready-for-dev` |
+| 4 | `cancelled` | closed | `cancelled` |
 
+**Rule**: Chỉ tasks có status `ready for dev` (đã có Spec, Design, Estimate) mới được move vào Sprint.
+
+---
+
+### 🐛 Bug Triage
+**ID**: `901815396345`  
+**Sync từ**: `_bmad-output/bugs/*.md` *(chưa implement)*
+
+| Order | Status | Type | Markdown Value |
+|-------|--------|------|----------------|
+| 0 | `new` | open | `new` |
+| 1 | `checking` | custom | `checking` |
+| 2 | `fixing` | custom | `fixing` |
+| 3 | `verified` | done | `verified` |
+| 4 | `won't fix` | closed | `wont-fix` |
+
+**Rule**: PM review weekly để quyết định Hotfix ngay hay đưa vào Backlog.
+
+---
+
+### 🏃 Sprint Lists
+**Sprint 1 ID**: `901815360889` (1/26 - 2/8)  
+**Sprint 2 ID**: `901815360910` (2/9 - 2/22)
+
+| Order | Status | Type | Markdown Value |
+|-------|--------|------|----------------|
+| 0 | `to do` | open | `to-do` |
+| 1 | `in development` | custom | `in-development` |
+| 2 | `in review` | custom | `in-review` |
+| 3 | `testing` | custom | `testing` |
+| 4 | `shipped` | done | `shipped` |
+| 5 | `cancelled` | closed | `cancelled` |
+
+**Rule**: User Stories chỉ chuyển sang `shipped` khi tất cả subtasks hoàn thành. Real-time update bắt buộc.
+
+---
+
+## 3. Task Standards
+
+### Time Estimate
+- **Bắt buộc** trước khi bắt đầu
+- Đơn vị: Hours
+- Maximum: 8h/task (nếu lớn hơn → tách subtasks)
+
+### Time Tracking
+- Sử dụng **Play/Stop** để tracking
+- Mục đích: calibration, không phải policing
+
+### Dates
+- `Start Date` và `Due Date` **bắt buộc**
+- Để tính toán workload chính xác
+
+### Priority
+
+| Priority | Ý nghĩa |
+|----------|---------|
+| `Urgent` | Immediate action |
+| `High` | Core Sprint features |
+| `Normal` | Default |
+| `Low` | Nice to have |
+
+### Tags (kebab-case)
+
+**Technical Domain**: `frontend`, `backend`, `mobile`, `devops`  
+**Functional Modules**: `auth`, `payment`, `dashboard`, `user`  
+**Maintenance**: `tech-debt`, `refactor`, `hotfix`
+
+---
+
+## 4. GitHub Integration
+
+### Workflow File
+`.github/workflows/sync-clickup.yml`
+
+### Required Secret
+**Name**: `CLICKUP_API_KEY`  
+**Value**: `pk_xxx...` (ClickUp API token)
+
+### Cách hoạt động
+
+```
+Developer tạo/sửa file trong _bmad-output/
+        ↓
+git push to main
+        ↓
+GitHub Action triggers
+        ↓
+Workflow parse frontmatter
+        ↓
+IF clickup_task_id == null:
+   → CREATE task mới
+   → Commit ID về repo
+ELSE:
+   → UPDATE task hiện có
+```
+
+### Frontmatter Format
+
+**Epic**:
 ```yaml
 ---
 id: "EPIC-001"
 title: "User Authentication"
-status: "to-do"           # to-do | in-progress | done | cancelled
-priority: "high"
-assigned_to: null
-created_at: "2026-01-29"
-updated_at: "2026-01-29"
-clickup_task_id: null     # Auto-filled by workflow
+status: "to-do"
+clickup_task_id: null
 ---
 ```
 
-### Story
-
+**Story**:
 ```yaml
 ---
 id: "STORY-1.1"
-epic_id: "EPIC-001"       # Links to parent epic
+epic_id: "EPIC-001"
 title: "Login Page"
-status: "to-do"           # to-do | scoping | in-design | in-progress | done
-assigned_to: null
-story_points: 5
-sprint: "Sprint 1"
-created_at: "2026-01-29"
-updated_at: "2026-01-29"
-clickup_task_id: null     # Auto-filled by workflow
+status: "to-do"
+clickup_task_id: null
 ---
 ```
 
 ---
 
-## GitHub Workflow Configuration
-
-### Required Secret
-
-**Name**: `CLICKUP_API_KEY`  
-**Value**: Your ClickUp API token (`pk_xxx...`)
-
-Location: Repository → Settings → Secrets → Actions
-
-### List IDs (in `.github/workflows/sync-clickup.yml`)
-
-```yaml
-env:
-  CLICKUP_EPICS_LIST_ID: "901815396322"
-  CLICKUP_STORIES_LIST_ID: "901815396340"
-```
-
----
-
-## How It Works
-
-```
-Developer edits _bmad-output/*.md
-        ↓
-git push to main
-        ↓
-GitHub Action triggers (path filter)
-        ↓
-Workflow parses frontmatter
-        ↓
-IF clickup_task_id is null:
-   → CREATE new task
-   → Commit ID back to repo
-ELSE:
-   → UPDATE existing task
-        ↓
-ClickUp task synced!
-```
-
----
-
-## Troubleshooting
-
-### "refusing to allow OAuth App to create workflow"
-
-**Fix**: Use Personal Access Token with `repo` + `workflow` scopes.
-
-### "exit code 128"
-
-**Fix**: Already handled with:
-```yaml
-permissions:
-  contents: write
-```
-
-### Task not creating
-
-**Check**:
-1. File is in `_bmad-output/epics/` or `_bmad-output/stories/`
-2. File ends with `.md`
-3. Frontmatter has `clickup_task_id: null`
-
-### Status not updating
-
-**Check**: Status value matches mappings above (case-sensitive).
-
----
-
-## Admin Links
+## 5. Admin Links
 
 - **GitHub Actions**: https://github.com/hutune/demo-structure/actions
 - **ClickUp Space**: https://app.clickup.com/90182277854/v/s/90189438827
 - **Epics List**: https://app.clickup.com/90182277854/v/li/901815396322
 - **Product Backlog**: https://app.clickup.com/90182277854/v/li/901815396340
+- **Bug Triage**: https://app.clickup.com/90182277854/v/li/901815396345
+- **ClickUp Rules Doc**: https://app.clickup.com/90182277854/v/dc/2kzmgppy-1258/2kzmgppy-1278
