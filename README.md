@@ -1,106 +1,178 @@
-# RMN Platform - BMAD Enhanced Setup
+# RMN Platform - Project Overview
 
-🚀 **AI-Driven Development Platform** integrating BMAD methodology with Everything Claude Code automation.
-
-## 🎯 Overview
-
-Complete AI-assisted development environment featuring:
-- **47 BMAD workflows** across 4 development phases
-- **10 specialized agents** (PM, Architect, Dev, UX Designer, etc.)
-- **Everything Claude Code integration** with 20 commands, 4 skills, 16 hooks
-- **Continuous learning system** with instinct-based pattern evolution
-- **Zero-conflict architecture** verified and production-ready
-
-## 📦 What's Included
-
-### Core Components
-- `_bmad/` - BMAD Framework (303 files, 10 agents, 47 workflows)
-- `.agent/workflows/` - 47 BMAD workflow commands
-- `.claude/` - Everything Claude Code installation
-  - 4 agents (security, TDD, build-fixer, refactor)
-  - 4 skills (learning, TDD, eval, verify)
-  - 20 commands (conflict-free)
-  - 16 hooks (automated event triggers)
-  - 6 scripts (automation utilities)
-- `_bmad-output/` - Artifact management folders
-
-### Documentation
-All documentation temporarily stored in `docs-chua-sap-xep/` (to be reorganized):
-- `QUICK-START.md` - Main usage guide
-- `SETUP-COMPLETE.md` - Status summary with roadmap
-- `COMMANDS-ARCHITECTURE.md` - Component deep dive
-- `HOOKS-SCRIPTS-GUIDE.md` - Automation guide
-- `CUSTOM-HOOKS-GUIDE.md` - Customization guide
-- `PLUGIN-INSTALL-GUIDE.md` - Plugin installation
-- `CONFLICT-ANALYSIS.md` - Quality verification report
-- `.claude/PROJECT-CONFIG.md` - Integration rules
-
-## 🚀 Quick Start
-
-### Prerequisites
-- VS Code with Claude Code extension
-- Node.js (for hooks/scripts)
-- Python 3.x (for instinct-cli)
-
-### Installation
-
-1. Clone this repository
-2. All components are pre-configured and ready to use
-3. Start using BMAD workflows with `@bmad-` prefix
-4. Use ECC commands with `/` prefix
-
-### Key Commands
-
-**BMAD Workflows (47 total):**
-- `@bmad-bmm-pm` - Project management workflows
-- `@bmad-bmm-architect` - System architecture design
-- `@bmad-bmm-dev` - Development workflows
-- `@bmad-party-mode` - Multi-agent collaboration
-
-**ECC Commands (20 total):**
-- `/instinct-status` - View learned patterns
-- `/review` - Code review
-- `/test` - TDD guidance
-- `/security-scan` - Security analysis
-
-See `docs-chua-sap-xep/QUICK-START.md` for complete reference.
-
-## 📊 Project Status
-
-- ✅ **Setup Completion:** 100% (Jan 28, 2026)
-- ✅ **Conflict Resolution:** Zero conflicts verified
-- ✅ **Documentation:** 8 comprehensive guides
-- ⏳ **Next Phase:** ClickUp integration (Jan 29, 2026)
-
-## 🎯 Roadmap
-
-**Tomorrow (Jan 29, 2026):**
-- ClickUp automation integration
-- Team best practices documentation
-- Optional UI/UX Pro Max plugin
-
-**This Week:**
-- Community Skills installation
-- Real workflow testing
-- Performance optimization
-
-**Post-Tết:**
-- Team training and adoption
-- Continuous learning optimization
-- Custom workflow development
-
-## 📚 Resources
-
-- [BMAD Method Documentation](https://github.com/affaan-m/bmad-method)
-- [Everything Claude Code](https://github.com/affaan-m/everything-claude-code)
-- [UI/UX Pro Max Plugin](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
-
-## 📝 License
-
-This is a private setup for RMN Platform development.
+> **Modern Platform Development with AI-Powered Workflows**
 
 ---
 
-**Setup Date:** January 28, 2026  
-**Version:** BMAD v6.0.0-alpha.23 + ECC Integration  
-**Status:** Production Ready ✅
+## 🎯 Project Purpose
+
+RMN Platform is designed for efficient, AI-assisted development using the **BMAD Method** (Breakthrough Method of Agile AI-Driven Development) with integrated project management via ClickUp.
+
+---
+
+## 📊 Tech Stack
+
+| Category | Technologies |
+|----------|-------------|
+| **Frontend** | Flutter Web |
+| **Backend** | Golang, Kubernetes, OpenAPI |
+| **AI Development** | BMAD Method (47 workflows), Claude Code |
+| **Project Management** | ClickUp (automated sync) |
+| **CI/CD** | GitHub Actions |
+| **Collaboration** | Google Drive, GitHub |
+
+---
+
+## 🚀 Quick Start
+
+### For New Team Members
+1. **Setup**: Read [Developer Setup Guide](docs/team-processes/developer-setup-guide.md)
+2. **Workflows**: Review [ClickUp Workflow Guide](docs/team-processes/clickup-workflow-guide.md)
+3. **Architecture**: Explore [Tech Specs](docs/tech-specs/)
+
+### For Quick Development
+```bash
+# Clone repository
+git clone https://github.com/hutune/demo-structure.git
+cd demo-structure
+
+# Configure Git
+git config user.name "Your Name"
+git config user.email "your.email@kwayvina.com"
+
+# Start working with BMAD
+# See docs for available workflows
+```
+
+---
+
+## 📂 Repository Structure
+
+```
+RMN/
+├── .agent/                    # BMAD workflows (47 commands)
+├── .claude/                   # Claude Code agents & skills
+├── .github/workflows/         # GitHub Actions (ClickUp sync)
+├── _bmad/                     # BMAD framework core
+├── _bmad-output/              # Generated artifacts
+│   ├── epics/                 # Product epics
+│   ├── stories/               # User stories  
+│   └── templates/             # Templates for epics, stories, reports
+├── docs/                      # Documentation
+│   ├── team-processes/        # Operational guides & workflows
+│   ├── tech-specs/            # Architecture & technical specs
+│   └── bmad_onboarding/       # BMAD framework onboarding
+├── src/                       # Source code (TBD)
+└── README.md                  # This file
+```
+
+---
+
+## 🔄 Development Workflow
+
+### 1. Planning Phase
+```bash
+# Create Product Requirements
+@bmad-bmm-create-prd
+
+# Design Architecture
+@bmad-bmm-create-architecture
+
+# Break down into Epics & Stories
+@bmad-bmm-create-epics-and-stories
+```
+
+### 2. Implementation Phase
+```bash
+# Implement a story
+@bmad-bmm-dev-story
+
+# Code review
+@bmad-bmm-code-review
+```
+
+### 3. Sync to ClickUp (Automatic)
+```bash
+# Just commit and push
+git add .
+git commit -m "feat: Add user authentication epic"
+git push
+
+# GitHub Actions automatically:
+# - Creates/updates tasks in ClickUp
+# - Syncs status, assignees, tags, dates
+# - Updates comments to Activity panel
+```
+
+---
+
+## 📖 Documentation
+
+| Document | Purpose | Location |
+|----------|---------|----------|
+| **Developer Setup** | Onboarding guide for new team members | [docs/team-processes/](docs/team-processes/developer-setup-guide.md) |
+| **ClickUp Workflow** | How to work with ClickUp integration | [docs/team-processes/](docs/team-processes/clickup-workflow-guide.md) |
+| **Tech Specs** | Architecture & design decisions | [docs/tech-specs/](docs/tech-specs/) |
+| **BMAD Onboarding** | BMAD framework deep dive | [docs/bmad_onboarding/](docs/bmad_onboarding/) |
+
+---
+
+## 🤝 Team
+
+| Name | Role | Email | ClickUp ID |
+|------|------|-------|------------|
+| Mazh Nguyen | Developer | work.huutrung@gmail.com | 300697285 |
+| Leo | Developer | leonkenzo1997@gmail.com | 107577458 |
+| Eric Bae | Owner/Manager | eric@devcrane.com | 55771542 |
+
+---
+
+## � Key Features
+
+### Automated ClickUp Integration
+- ✅ **Auto-sync** epics & stories from Git to ClickUp
+- ✅ **Full field mapping**: status, priority, dates, tags, assignees, links
+- ✅ **Comments** sync to Activity panel (not description)
+- ✅ **Checklists & Attachments** support
+- ✅ **No manual intervention** required
+
+### AI-Powered Development
+- 47 BMAD workflows (from brainstorming to deployment)
+- 10 specialized agents (PM, Architect, Dev, UX, QA, etc.)
+- Continuous learning system
+- Custom commands for rapid development
+
+---
+
+## �️ Tools & Technologies
+
+### Development Tools
+- **VS Code** with Claude Code extension
+- **Git & GitHub CLI**
+- **Node.js >= 18**
+- **Python >= 3.9**
+
+### Project Management
+- **ClickUp** - Task management (auto-synced)
+- **GitHub Actions** - CI/CD automation
+- **Google Drive** - Document collaboration
+
+---
+
+## 📞 Support
+
+- **Team Chat**: [Your communication channel]
+- **Issues**: [GitHub Issues](https://github.com/hutune/demo-structure/issues)
+- **Admin Contact**: work.huutrung@gmail.com
+
+---
+
+## � License
+
+[Your License] - All Rights Reserved
+
+---
+
+**Last Updated**: January 29, 2026  
+**Version**: 1.0  
+**Maintainer**: work.huutrung@gmail.com
