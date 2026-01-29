@@ -1,3 +1,10 @@
+---
+clickup_workspace_id: "90182277854"
+clickup_doc_id: "2kzmgppy-1378"
+clickup_page_id: null
+title: "Developer Setup Guide"
+---
+
 # Team Onboarding Guide - RMN Platform Setup
 
 > **Mục đích**: Hướng dẫn setup môi trường cho team members khi clone project từ GitHub hoặc Google Drive

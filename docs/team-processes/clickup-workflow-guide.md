@@ -1,3 +1,10 @@
+---
+clickup_workspace_id: "90182277854"
+clickup_doc_id: "2kzmgppy-1378"
+clickup_page_id: null
+title: "ClickUp Workflow Guide"
+---
+
 # ClickUp Rules & Integration Guide
 
 > **Đọc kỹ trước khi làm việc với ClickUp!**

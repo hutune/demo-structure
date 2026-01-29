@@ -1,4 +1,4 @@
-name: Sync BMAD Artifacts to ClickUp
+name: Sync BMAD Tasks to ClickUp (Epics & Stories)
 
 on:
   push:
