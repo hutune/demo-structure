@@ -8,11 +8,9 @@ on:
       - '_bmad-output/stories/**/*.md'
 
 env:
-  # List IDs for different artifact types
   CLICKUP_EPICS_LIST_ID: "901815396322"
   CLICKUP_STORIES_LIST_ID: "901815396340"
 
-# Permissions needed to push commit back to repo
 permissions:
   contents: write
 
@@ -34,13 +32,14 @@ jobs:
           echo "files<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          echo "Changed files found: $CHANGED_FILES"
+          echo "Changed files: $CHANGED_FILES"
 
       - name: Sync to ClickUp
         if: steps.changed.outputs.files != ''
         env:
           CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
         run: |
+          set -e
           echo "Starting ClickUp sync..."
           
           for file in ${{ steps.changed.outputs.files }}; do
@@ -49,15 +48,19 @@ jobs:
             echo "Processing: $file"
             echo "========================================="
             
-            # Extract frontmatter using awk
-            FRONTMATTER=$(awk '/^---$/{p=!p;next}p' "$file" | head -30)
+            # Extract frontmatter between --- markers
+            FRONTMATTER=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
             
-            # Parse YAML fields
-            ID=$(echo "$FRONTMATTER" | grep '^id:' | sed 's/id: *//; s/"//g' | tr -d ' ')
-            TITLE=$(echo "$FRONTMATTER" | grep '^title:' | sed 's/title: *//; s/"//g')
-            STATUS=$(echo "$FRONTMATTER" | grep '^status:' | sed 's/status: *//; s/"//g' | tr -d ' ')
-            CLICKUP_ID=$(echo "$FRONTMATTER" | grep '^clickup_task_id:' | sed 's/clickup_task_id: *//; s/"//g' | tr -d ' ')
-            EPIC_ID=$(echo "$FRONTMATTER" | grep '^epic_id:' | sed 's/epic_id: *//; s/"//g' | tr -d ' ')
+            # Parse fields - remove quotes and trim whitespace
+            parse_field() {
+              echo "$FRONTMATTER" | grep "^$1:" | sed "s/^$1: *//" | sed 's/^"//; s/"$//; s/^'"'"'//; s/'"'"'$//' | tr -d '\r'
+            }
+            
+            ID=$(parse_field "id")
+            TITLE=$(parse_field "title")
+            STATUS=$(parse_field "status")
+            CLICKUP_ID=$(parse_field "clickup_task_id")
+            EPIC_ID=$(parse_field "epic_id")
             
             echo "  ID: $ID"
             echo "  Title: $TITLE"
@@ -68,44 +71,56 @@ jobs:
             if [[ "$file" == *"/epics/"* ]]; then
               TASK_TYPE="epic"
               LIST_ID="${{ env.CLICKUP_EPICS_LIST_ID }}"
-              # Status mapping for Epics list
               case "$STATUS" in
-                "to-do") CLICKUP_STATUS="to do" ;;
-                "in-progress") CLICKUP_STATUS="in progress" ;;
-                "done") CLICKUP_STATUS="complete" ;;
+                to-do) CLICKUP_STATUS="to do" ;;
+                in-progress) CLICKUP_STATUS="in progress" ;;
+                done) CLICKUP_STATUS="complete" ;;
                 *) CLICKUP_STATUS="to do" ;;
               esac
             else
               TASK_TYPE="story"
               LIST_ID="${{ env.CLICKUP_STORIES_LIST_ID }}"
-              # Status mapping for Product Backlog list  
               case "$STATUS" in
-                "to-do") CLICKUP_STATUS="Open" ;;
-                "scoping") CLICKUP_STATUS="scoping" ;;
-                "in-design") CLICKUP_STATUS="in design" ;;
-                "ready") CLICKUP_STATUS="ready for dev" ;;
-                "done") CLICKUP_STATUS="cancelled" ;;
+                to-do) CLICKUP_STATUS="Open" ;;
+                scoping) CLICKUP_STATUS="scoping" ;;
+                in-design) CLICKUP_STATUS="in design" ;;
+                ready) CLICKUP_STATUS="ready for dev" ;;
                 *) CLICKUP_STATUS="Open" ;;
               esac
             fi
             
-            echo "  Type: $TASK_TYPE"
-            echo "  List ID: $LIST_ID"
-            echo "  ClickUp Status: $CLICKUP_STATUS"
+            echo "  Type: $TASK_TYPE, List: $LIST_ID, Status: $CLICKUP_STATUS"
             
-            # Get description (content after frontmatter)
-            DESCRIPTION=$(awk '/^---$/{if(++c==2)p=1;next}p' "$file" | head -100)
+            # Get description (content after second ---)
+            DESCRIPTION=$(sed -n '/^---$/,/^---$/!p' "$file" | tail -n +1 | head -100)
             
-            # Prepare description with source info
-            FULL_DESC="**Auto-synced from BMAD workflow**\n\n"
+            # Build full description
             if [ -n "$EPIC_ID" ]; then
-              FULL_DESC="${FULL_DESC}**Epic**: $EPIC_ID\n\n---\n\n"
+              FULL_DESC="**Epic**: $EPIC_ID
+
+---
+
+$DESCRIPTION
+
+---
+_Source: $file_"
+            else
+              FULL_DESC="$DESCRIPTION
+
+---
+_Source: $file_"
             fi
-            FULL_DESC="${FULL_DESC}${DESCRIPTION}\n\n---\n_Source: $file_"
             
-            # Escape for JSON
-            DESCRIPTION_ESCAPED=$(echo -e "$FULL_DESC" | jq -Rs .)
-            TITLE_ESCAPED=$(echo "[$TASK_TYPE] $TITLE" | jq -Rs . | sed 's/^"//; s/"$//')
+            # Build JSON payload using jq (safe escaping)
+            TASK_NAME="[$TASK_TYPE] $TITLE"
+            JSON_PAYLOAD=$(jq -n \
+              --arg name "$TASK_NAME" \
+              --arg desc "$FULL_DESC" \
+              --arg status "$CLICKUP_STATUS" \
+              --arg type "$TASK_TYPE" \
+              '{name: $name, description: $desc, status: $status, tags: ["bmad", $type]}')
+            
+            echo "  JSON Payload created"
             
             if [ -z "$CLICKUP_ID" ] || [ "$CLICKUP_ID" = "null" ]; then
               # CREATE new task
@@ -115,44 +130,39 @@ jobs:
                 "https://api.clickup.com/api/v2/list/$LIST_ID/task" \
                 -H "Authorization: $CLICKUP_API_KEY" \
                 -H "Content-Type: application/json" \
-                -d "{
-                  \"name\": \"[$TASK_TYPE] $TITLE\",
-                  \"description\": $DESCRIPTION_ESCAPED,
-                  \"status\": \"$CLICKUP_STATUS\",
-                  \"tags\": [\"bmad\", \"$TASK_TYPE\"]
-                }")
+                -d "$JSON_PAYLOAD")
               
-              NEW_ID=$(echo "$RESPONSE" | jq -r '.id')
-              NEW_URL=$(echo "$RESPONSE" | jq -r '.url')
+              NEW_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
               
-              if [ "$NEW_ID" != "null" ] && [ -n "$NEW_ID" ]; then
-                echo "  ✅ Created ClickUp task: $NEW_ID"
-                echo "  URL: $NEW_URL"
+              if [ -n "$NEW_ID" ]; then
+                echo "  ✅ Created: $NEW_ID"
+                echo "  URL: $(echo "$RESPONSE" | jq -r '.url')"
                 
-                # Update markdown file with ClickUp ID
-                sed -i "s/clickup_task_id:.*/clickup_task_id: \"$NEW_ID\"/" "$file"
+                # Update file with new ClickUp ID
+                sed -i "s/^clickup_task_id:.*/clickup_task_id: \"$NEW_ID\"/" "$file"
               else
-                echo "  ❌ Error creating task:"
-                echo "$RESPONSE" | jq '.'
+                echo "  ❌ Error:"
+                echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
+                exit 1
               fi
-              
             else
               # UPDATE existing task
-              echo "  Updating existing ClickUp task: $CLICKUP_ID..."
+              echo "  Updating task: $CLICKUP_ID..."
+              
+              UPDATE_PAYLOAD=$(jq -n \
+                --arg name "$TASK_NAME" \
+                --arg desc "$FULL_DESC" \
+                --arg status "$CLICKUP_STATUS" \
+                '{name: $name, description: $desc, status: $status}')
               
               RESPONSE=$(curl -s -X PUT \
                 "https://api.clickup.com/api/v2/task/$CLICKUP_ID" \
                 -H "Authorization: $CLICKUP_API_KEY" \
                 -H "Content-Type: application/json" \
-                -d "{
-                  \"name\": \"[$TASK_TYPE] $TITLE\",
-                  \"description\": $DESCRIPTION_ESCAPED,
-                  \"status\": \"$CLICKUP_STATUS\"
-                }")
+                -d "$UPDATE_PAYLOAD")
               
-              echo "  ✅ Updated successfully"
+              echo "  ✅ Updated"
             fi
-            
           done
 
       - name: Commit Updated ClickUp IDs
