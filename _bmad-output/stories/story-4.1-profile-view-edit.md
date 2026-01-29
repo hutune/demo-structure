@@ -47,3 +47,4 @@ clickup_task_id: "86ewdmdjr"
 
 **2026-01-29 14:35** - @Leo: Đã bắt đầu implement API endpoint. Dự kiến xong GET/PUT endpoints trong hôm nay. Có 1 câu hỏi về validation rules cho phone number - cần confirm với PM.
 
+**2026-01-29 14:50** - @Leo: PM đã confirm phone validation. Đang implement form UI với React Hook Form. Expect done by EOD.
