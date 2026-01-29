@@ -2,7 +2,7 @@
 id: "STORY-3.1"
 epic_id: "EPIC-003"
 title: "Dashboard Layout & Navigation"
-status: "in-progress"
+status: "done"
 assigned_to: null
 story_points: 8
 sprint: "Sprint 3"
