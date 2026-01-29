@@ -104,7 +104,7 @@ for FILE in $CHANGED_FILES; do
     echo "➕ Creating new page..."
     
     RESPONSE=$(curl -s -X POST \
-      "https://api.clickup.com/api/v2/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages" \
+      "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages" \
       -H "Authorization: $API_KEY" \
       -H "Content-Type: application/json" \
       -d "$JSON_PAYLOAD")
@@ -132,7 +132,7 @@ for FILE in $CHANGED_FILES; do
     JSON_PAYLOAD=$(echo "$JSON_PAYLOAD" | jq '. + {content_edit_mode: "replace"}')
     
     RESPONSE=$(curl -s -X PUT \
-      "https://api.clickup.com/api/v2/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages/$PAGE_ID" \
+      "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages/$PAGE_ID" \
       -H "Authorization: $API_KEY" \
       -H "Content-Type: application/json" \
       -d "$JSON_PAYLOAD")
