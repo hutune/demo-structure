@@ -11,7 +11,7 @@ sprint: "Sprint 3"
 start_date: "2026-02-01"
 due_date: "2026-02-07"
 time_estimate: 8
-clickup_task_id: null
+clickup_task_id: "86ewdm63u"
 ---
 
 # Real-time Dashboard Updates
