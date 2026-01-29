@@ -8,7 +8,7 @@ story_points: 5
 sprint: "Sprint 3"
 created_at: "2026-01-29"
 updated_at: "2026-01-29T12:18:00"
-clickup_task_id: null
+clickup_task_id: "86ewdhtje"
 ---
 
 # Story: Charts Integration with Chart.js
