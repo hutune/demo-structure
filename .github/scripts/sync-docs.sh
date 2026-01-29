@@ -144,11 +144,14 @@ for FILE in $CHANGED_FILES; do
         -H "Content-Type: application/json" \
         -d "$JSON_PAYLOAD")
       
-      ERROR=$(echo "$RESPONSE" | jq -r '.err // empty')
-      if [ -n "$ERROR" ]; then
-        echo "❌ Failed to update Doc"
-        echo "Error: $ERROR"
-        exit 1
+      # Check for errors (only if response is valid JSON)
+      if echo "$RESPONSE" | jq -e . >/dev/null 2>&1; then
+        ERROR=$(echo "$RESPONSE" | jq -r '.err // empty')
+        if [ -n "$ERROR" ]; then
+          echo "❌ Failed to update Doc"
+          echo "Error: $ERROR"
+          exit 1
+        fi
       fi
       
       echo "✅ Updated Doc successfully"
@@ -229,11 +232,14 @@ for FILE in $CHANGED_FILES; do
       -H "Content-Type: application/json" \
       -d "$JSON_PAYLOAD")
     
-    ERROR=$(echo "$RESPONSE" | jq -r '.err // empty')
-    if [ -n "$ERROR" ]; then
-      echo "❌ Failed to update page"
-      echo "Error: $ERROR"
-      exit 1
+    # Check for errors (only if response is valid JSON)
+    if echo "$RESPONSE" | jq -e . >/dev/null 2>&1; then
+      ERROR=$(echo "$RESPONSE" | jq -r '.err // empty')
+      if [ -n "$ERROR" ]; then
+        echo "❌ Failed to update page"
+        echo "Error: $ERROR"
+        exit 1
+      fi
     fi
     
     echo "✅ Updated page successfully"
