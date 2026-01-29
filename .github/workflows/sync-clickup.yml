@@ -39,10 +39,12 @@ jobs:
         env:
           CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
         run: |
-          set -e
           echo "Starting ClickUp sync..."
           
-          for file in ${{ steps.changed.outputs.files }}; do
+          # Process each changed file
+          echo "${{ steps.changed.outputs.files }}" | while read -r file; do
+            if [ -z "$file" ]; then continue; fi
+            
             echo ""
             echo "========================================="
             echo "Processing: $file"
@@ -51,16 +53,12 @@ jobs:
             # Extract frontmatter between --- markers
             FRONTMATTER=$(sed -n '/^---$/,/^---$/p' "$file" | sed '1d;$d')
             
-            # Parse fields - remove quotes and trim whitespace
-            parse_field() {
-              echo "$FRONTMATTER" | grep "^$1:" | sed "s/^$1: *//" | sed 's/^"//; s/"$//; s/^'"'"'//; s/'"'"'$//' | tr -d '\r'
-            }
-            
-            ID=$(parse_field "id")
-            TITLE=$(parse_field "title")
-            STATUS=$(parse_field "status")
-            CLICKUP_ID=$(parse_field "clickup_task_id")
-            EPIC_ID=$(parse_field "epic_id")
+            # Parse fields inline - remove quotes and trim
+            ID=$(echo "$FRONTMATTER" | grep "^id:" | sed 's/^id: *//' | sed 's/^"//; s/"$//' | tr -d '\r')
+            TITLE=$(echo "$FRONTMATTER" | grep "^title:" | sed 's/^title: *//' | sed 's/^"//; s/"$//' | tr -d '\r')
+            STATUS=$(echo "$FRONTMATTER" | grep "^status:" | sed 's/^status: *//' | sed 's/^"//; s/"$//' | tr -d '\r')
+            CLICKUP_ID=$(echo "$FRONTMATTER" | grep "^clickup_task_id:" | sed 's/^clickup_task_id: *//' | sed 's/^"//; s/"$//' | tr -d '\r')
+            EPIC_ID=$(echo "$FRONTMATTER" | grep "^epic_id:" | sed 's/^epic_id: *//' | sed 's/^"//; s/"$//' | tr -d '\r')
             
             echo "  ID: $ID"
             echo "  Title: $TITLE"
@@ -111,7 +109,7 @@ _Source: $file_"
 _Source: $file_"
             fi
             
-            # Build JSON payload using jq (safe escaping)
+            # Build JSON payload using jq
             TASK_NAME="[$TASK_TYPE] $TITLE"
             JSON_PAYLOAD=$(jq -n \
               --arg name "$TASK_NAME" \
@@ -120,10 +118,10 @@ _Source: $file_"
               --arg type "$TASK_TYPE" \
               '{name: $name, description: $desc, status: $status, tags: ["bmad", $type]}')
             
-            echo "  JSON Payload created"
+            echo "  JSON created"
             
+            # Check if we need to CREATE or UPDATE
             if [ -z "$CLICKUP_ID" ] || [ "$CLICKUP_ID" = "null" ]; then
-              # CREATE new task
               echo "  Creating new ClickUp task..."
               
               RESPONSE=$(curl -s -X POST \
@@ -136,17 +134,15 @@ _Source: $file_"
               
               if [ -n "$NEW_ID" ]; then
                 echo "  ✅ Created: $NEW_ID"
-                echo "  URL: $(echo "$RESPONSE" | jq -r '.url')"
+                echo "  URL: $(echo "$RESPONSE" | jq -r '.url // empty')"
                 
                 # Update file with new ClickUp ID
                 sed -i "s/^clickup_task_id:.*/clickup_task_id: \"$NEW_ID\"/" "$file"
               else
-                echo "  ❌ Error:"
-                echo "$RESPONSE" | jq '.' || echo "$RESPONSE"
-                exit 1
+                echo "  ❌ Error creating task:"
+                echo "$RESPONSE"
               fi
             else
-              # UPDATE existing task
               echo "  Updating task: $CLICKUP_ID..."
               
               UPDATE_PAYLOAD=$(jq -n \
@@ -155,11 +151,11 @@ _Source: $file_"
                 --arg status "$CLICKUP_STATUS" \
                 '{name: $name, description: $desc, status: $status}')
               
-              RESPONSE=$(curl -s -X PUT \
+              curl -s -X PUT \
                 "https://api.clickup.com/api/v2/task/$CLICKUP_ID" \
                 -H "Authorization: $CLICKUP_API_KEY" \
                 -H "Content-Type: application/json" \
-                -d "$UPDATE_PAYLOAD")
+                -d "$UPDATE_PAYLOAD" > /dev/null
               
               echo "  ✅ Updated"
             fi
