@@ -8,7 +8,7 @@ story_points: 5
 sprint: "Sprint 3"
 created_at: "2026-01-29"
 updated_at: "2026-01-29"
-clickup_task_id: null
+clickup_task_id: "86ewdkdht"
 ---
 
 # Story: Widget Configuration Panel
