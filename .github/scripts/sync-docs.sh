@@ -92,31 +92,31 @@ for FILE in $CHANGED_FILES; do
   
   # =========================================
   # STANDALONE DOC (type: "doc")
+  # Uses a root page inside the Doc to store content
+  # (ClickUp API v3 doesn't support updating Doc root content)
   # =========================================
   if [ "$DOC_TYPE" == "doc" ]; then
     echo "📚 Type: Standalone Doc"
     
     DOC_ID=$(get_frontmatter_value "$FILE" "clickup_doc_id")
+    ROOT_PAGE_ID=$(get_frontmatter_value "$FILE" "clickup_root_page_id")
     
-    # Prepare JSON payload for Doc
-    JSON_PAYLOAD=$(jq -n \
-      --arg name "$TITLE" \
-      --arg content "$CONTENT" \
-      '{
-        name: $name,
-        content: $content,
-        content_format: "text/md"
-      }')
-    
+    # For standalone Docs, we need to create the Doc first, then add content as a page
     if [ -z "$DOC_ID" ] || [ "$DOC_ID" == "null" ]; then
-      # CREATE new standalone Doc
+      # CREATE new standalone Doc (empty, just the container)
       echo "➕ Creating new standalone Doc..."
+      
+      DOC_PAYLOAD=$(jq -n \
+        --arg name "$TITLE" \
+        '{
+          name: $name
+        }')
       
       RESPONSE=$(curl -s -X POST \
         "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs" \
         -H "Authorization: $API_KEY" \
         -H "Content-Type: application/json" \
-        -d "$JSON_PAYLOAD")
+        -d "$DOC_PAYLOAD")
       
       NEW_DOC_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
       
@@ -127,34 +127,72 @@ for FILE in $CHANGED_FILES; do
       fi
       
       echo "✅ Created Doc: $NEW_DOC_ID"
+      DOC_ID="$NEW_DOC_ID"
       
       # Write back to frontmatter
       update_frontmatter_value "$FILE" "clickup_doc_id" "$NEW_DOC_ID"
       echo "📌 Updated frontmatter with doc_id"
-      
     else
-      # UPDATE existing Doc
-      echo "♻️  Updating Doc: $DOC_ID..."
+      echo "📋 Using existing Doc: $DOC_ID"
+    fi
+    
+    # Now create or update the root page inside this Doc
+    PAGE_PAYLOAD=$(jq -n \
+      --arg title "$TITLE" \
+      --arg content "$CONTENT" \
+      '{
+        name: $title,
+        content: $content,
+        content_format: "text/md"
+      }')
+    
+    if [ -z "$ROOT_PAGE_ID" ] || [ "$ROOT_PAGE_ID" == "null" ]; then
+      # CREATE root page inside Doc
+      echo "➕ Creating root page with content..."
       
-      JSON_PAYLOAD=$(echo "$JSON_PAYLOAD" | jq '. + {content_edit_mode: "replace"}')
-      
-      RESPONSE=$(curl -s -X PUT \
-        "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs/$DOC_ID" \
+      RESPONSE=$(curl -s -X POST \
+        "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages" \
         -H "Authorization: $API_KEY" \
         -H "Content-Type: application/json" \
-        -d "$JSON_PAYLOAD")
+        -d "$PAGE_PAYLOAD")
       
-      # Check for errors (only if response is valid JSON)
+      NEW_PAGE_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
+      
+      if [ -z "$NEW_PAGE_ID" ]; then
+        echo "❌ Failed to create root page"
+        echo "Response: $RESPONSE"
+        exit 1
+      fi
+      
+      echo "✅ Created root page: $NEW_PAGE_ID"
+      
+      # Write back to frontmatter
+      update_frontmatter_value "$FILE" "clickup_root_page_id" "$NEW_PAGE_ID"
+      echo "📌 Updated frontmatter with root_page_id"
+      
+    else
+      # UPDATE existing root page
+      echo "♻️  Updating root page: $ROOT_PAGE_ID..."
+      
+      PAGE_PAYLOAD=$(echo "$PAGE_PAYLOAD" | jq '. + {content_edit_mode: "replace"}')
+      
+      RESPONSE=$(curl -s -X PUT \
+        "https://api.clickup.com/api/v3/workspaces/$WORKSPACE_ID/docs/$DOC_ID/pages/$ROOT_PAGE_ID" \
+        -H "Authorization: $API_KEY" \
+        -H "Content-Type: application/json" \
+        -d "$PAGE_PAYLOAD")
+      
+      # Check for errors
       if echo "$RESPONSE" | jq -e . >/dev/null 2>&1; then
         ERROR=$(echo "$RESPONSE" | jq -r '.err // empty')
         if [ -n "$ERROR" ]; then
-          echo "❌ Failed to update Doc"
+          echo "❌ Failed to update root page"
           echo "Error: $ERROR"
           exit 1
         fi
       fi
       
-      echo "✅ Updated Doc successfully"
+      echo "✅ Updated root page successfully"
     fi
     
     continue

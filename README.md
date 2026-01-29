@@ -1,6 +1,7 @@
 ---
 clickup_workspace_id: "90182277854"
 clickup_doc_id: "2kzmgppy-1918"
+clickup_root_page_id: null
 type: "doc"
 title: "RMN Platform Overview"
 ---
