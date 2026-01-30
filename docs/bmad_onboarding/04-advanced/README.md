@@ -1,3 +1,10 @@
+---
+clickup_workspace_id: "90182277854"
+type: "page"
+clickup_parent_doc_id: "2kzmgppy-2038"
+title: "Advanced BMAD Internals"
+---
+
 # Advanced BMAD Internals
 
 **Deep dive into BMAD framework architecture, execution engine, and workflows.**
