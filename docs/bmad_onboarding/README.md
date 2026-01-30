@@ -346,3 +346,4 @@ Nếu bạn tìm thấy lỗi hoặc muốn improve documentation:
 ---
 
 **🎯 BẮT ĐẦU NGAY**: Đọc [`01-getting-started/01-bmad-quickstart.md`](01-getting-started/01-bmad-quickstart.md)
+
