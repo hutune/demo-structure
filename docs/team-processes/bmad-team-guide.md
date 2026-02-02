@@ -1,4 +1,6 @@
 ---
+clickup_workspace_id: "90182277854"
+clickup_doc_id: "2kzmgppy-1378"
 title: "Hướng Dẫn Sử Dụng BMAD Cho Team"
 ---
 
