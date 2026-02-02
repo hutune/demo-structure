@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(for svc in campaign-service supplier-service device-service billing-service cms-service blocking-service admin-service)",
+      "Bash(do touch app/backend/services/$svc/.gitkeep)",
+      "Bash(done)"
+    ]
+  }
+}
