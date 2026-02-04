@@ -5,8 +5,8 @@ on:
   push:
     branches: [main]
     paths:
-      - '_bmad-output/epics/**/*.md'
-      - '_bmad-output/stories/**/*.md'
+      - '_bmad-output/planning-artifacts/epics/**/*.md'
+      - '_bmad-output/planning-artifacts/stories/**/*.md'
 
 env:
   CLICKUP_EPICS_LIST_ID: "901815396322"
@@ -68,8 +68,8 @@ jobs:
           
           # Build epic mapping: epic_id:clickup_id,...
           EPIC_MAP=""
-          if ls _bmad-output/epics/*.md 1>/dev/null 2>&1; then
-            for f in _bmad-output/epics/*.md; do
+          if ls _bmad-output/planning-artifacts/epics/*/*.md 1>/dev/null 2>&1; then
+            for f in _bmad-output/planning-artifacts/epics/*/*.md; do
               FM=$(sed -n '2,/^---$/p' "$f" 2>/dev/null | head -n -1)
               E_ID=$(echo "$FM" | grep "^id:" | sed 's/^id: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
               E_CU=$(echo "$FM" | grep "^clickup_task_id:" | sed 's/^clickup_task_id: *//' | sed 's/^"//;s/"$//;s/^null$//' | tr -d '\r')
