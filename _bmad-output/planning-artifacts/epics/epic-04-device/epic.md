@@ -7,7 +7,7 @@ assigned_to: null
 tags: ["epic", "backend", "device", "playback", "heartbeat"]
 start_date: null
 due_date: null
-clickup_task_id: "86ewgcz48"
+clickup_task_id: null
 ---
 
 # Device Integration & Playback
