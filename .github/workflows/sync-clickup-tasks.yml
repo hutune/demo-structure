@@ -38,10 +38,12 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.sync_all }}" == "true" ]; then
             echo "Sync all mode - finding all epic and story files"
-            CHANGED=$(find _bmad-output/planning-artifacts/epics -type f -name "*.md" | tr '\n' ' ')
+            EPICS=$(find _bmad-output/planning-artifacts/epics -type f -name "epic.md" 2>/dev/null | tr '\n' ' ')
+            STORIES=$(find _bmad-output/planning-artifacts/epics -type f -name "story-*.md" 2>/dev/null | tr '\n' ' ')
+            CHANGED="$EPICS $STORIES"
           else
             echo "Git diff mode - finding changed files only"
-            CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '_bmad-output/planning-artifacts/(epics|stories)/.*\.md$' | tr '\n' ' ' || echo "")
+            CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '_bmad-output/planning-artifacts/epics/.*\.md$' | tr '\n' ' ' || echo "")
           fi
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
           
@@ -120,6 +122,7 @@ jobs:
             STATUS=$(get_field status)
             CU_ID=$(get_field clickup_task_id)
             EPIC=$(get_field epic_id)
+            LINK_TYPE=$(get_field link_type)
             ASSIGNED=$(get_field assigned_to)
             PRIORITY=$(get_field priority)
             START_DATE=$(get_field start_date)
@@ -162,9 +165,11 @@ jobs:
               case "$STATUS" in 
                 to-do) CU_ST="TO DO";; 
                 in-design) CU_ST="IN DESIGN";; 
-                ready-for-dev|in-progress) CU_ST="READY FOR DEV";; 
+                in-progress) CU_ST="IN PROGRESS";; 
+                ready-for-dev) CU_ST="READY FOR DEV";; 
                 in-test) CU_ST="READY FOR TEST";;
-                done) CU_ST="COMPLETE";;
+                done) CU_ST="READY FOR RELEASE";;
+                cancelled) CU_ST="CANCELLED";;
                 *) CU_ST="TO DO";; 
               esac
             else
@@ -207,31 +212,48 @@ jobs:
             TIME_MS=$(hours_to_ms "$TIME_EST")
             [ -n "$TIME_MS" ] && PAYLOAD=$(echo "$PAYLOAD" | jq --argjson t "$TIME_MS" '. + {time_estimate:$t}')
             
-            # Link to epic
+            # Link to epic with relationship type
             if [ "$TYPE" = "story" ] && [ -n "$EPIC" ]; then
               EPIC_CU=$(get_epic_cu "$EPIC")
               if [ -n "$EPIC_CU" ]; then
-                PAYLOAD=$(echo "$PAYLOAD" | jq --arg l "$EPIC_CU" '. + {links_to:$l}')
-                echo "  Linking to $EPIC -> $EPIC_CU"
+                RT="${LINK_TYPE:-waiting_on}"  # Default: story waits on epic
+                PAYLOAD=$(echo "$PAYLOAD" | jq --arg l "$EPIC_CU" --arg t "$RT" \
+                  '. + {links:[{task_id:$l, type:$t}]}')
+                echo "  Linking to $EPIC → $EPIC_CU ($RT)"
               fi
             fi
             
             if [ -z "$CU_ID" ]; then
-              echo "  Creating..."
-              RES=$(curl -s -X POST "https://api.clickup.com/api/v2/list/$LIST/task" \
-                -H "Authorization: $CLICKUP_API_KEY" -H "Content-Type: application/json" \
-                -d "$PAYLOAD" 2>&1) || { echo "  Error: $RES"; continue; }
+              # Check for existing task by ID in description (sync_all duplicate prevention)
+              echo "  Checking for duplicates..."
+              EXISTING=$(curl -sf "https://api.clickup.com/api/v2/list/$LIST/task" \
+                -H "Authorization: $CLICKUP_API_KEY" | \
+                jq -r --arg id "$ID" '.tasks[] | select(.description | contains($id)) | .id' | head -1)
               
-              NEW_ID=$(echo "$RES" | jq -r '.id // empty')
-              if [ -n "$NEW_ID" ]; then
-                echo "  Created: $NEW_ID"
-                sed -i "s/^clickup_task_id:.*/clickup_task_id: \"$NEW_ID\"/" "$file"
+              if [ -n "$EXISTING" ]; then
+                echo "  Found existing task: $EXISTING (recovering frontmatter)"
+                sed -i "s/^clickup_task_id:.*/clickup_task_id: \"$EXISTING\"/" "$file"
+                CU_ID="$EXISTING"  # Fall through to update logic
               else
-                echo "  Failed: $RES"
+                echo "  Creating..."
+                RES=$(curl -s -X POST "https://api.clickup.com/api/v2/list/$LIST/task" \
+                  -H "Authorization: $CLICKUP_API_KEY" -H "Content-Type: application/json" \
+                  -d "$PAYLOAD" 2>&1) || { echo "  Error: $RES"; continue; }
+                
+                NEW_ID=$(echo "$RES" | jq -r '.id // empty')
+                if [ -n "$NEW_ID" ]; then
+                  echo "  Created: $NEW_ID"
+                  sed -i "s/^clickup_task_id:.*/clickup_task_id: \"$NEW_ID\"/" "$file"
+                else
+                  echo "  Failed: $RES"
+                fi
               fi
-            else
+            fi
+            
+            # Update logic (handles both explicit updates and recovered duplicates)
+            if [ -n "$CU_ID" ]; then
               echo "  Updating $CU_ID..."
-              UP=$(echo "$PAYLOAD" | jq 'del(.links_to)')
+              UP=$(echo "$PAYLOAD" | jq 'del(.links_to, .links)')  # Remove link fields from update
               curl -sf -X PUT "https://api.clickup.com/api/v2/task/$CU_ID" \
                 -H "Authorization: $CLICKUP_API_KEY" -H "Content-Type: application/json" \
                 -d "$UP" > /dev/null 2>&1 && echo "  Updated" || echo "  Update failed"
