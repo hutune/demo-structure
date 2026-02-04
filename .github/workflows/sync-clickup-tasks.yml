@@ -1,6 +1,7 @@
 name: Sync BMAD Tasks to ClickUp (Epics & Stories)
 
 on:
+  workflow_dispatch:  # Enable manual trigger
   push:
     branches: [main]
     paths:

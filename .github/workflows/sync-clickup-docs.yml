@@ -1,6 +1,7 @@
 name: Sync Docs to ClickUp Knowledge Base
 
 on:
+  workflow_dispatch:  # Enable manual trigger
   push:
     branches: [main]
     paths:
