@@ -173,7 +173,7 @@ jobs:
             
             if [ -z "$CU_ID" ]; then
               echo "  Creating..."
-              RES=$(curl -sf -X POST "https://api.clickup.com/api/v2/list/$LIST/task" \
+              RES=$(curl -s -X POST "https://api.clickup.com/api/v2/list/$LIST/task" \
                 -H "Authorization: $CLICKUP_API_KEY" -H "Content-Type: application/json" \
                 -d "$PAYLOAD" 2>&1) || { echo "  Error: $RES"; continue; }
               
