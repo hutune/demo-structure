@@ -73,3 +73,5 @@ Format: **YYYY-MM-DD** - Status update
 **2026-02-04 14:45** - Testing workflows after grep pattern fix
 
 **2026-02-04 14:47** - Testing after API mapping fixes (status=COMPLETE, priority=urgent)
+
+**2026-02-04 14:58** - Testing with error logging enabled
