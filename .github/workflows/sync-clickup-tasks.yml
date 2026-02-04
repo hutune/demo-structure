@@ -1,7 +1,13 @@
 name: Sync BMAD Tasks to ClickUp (Epics & Stories)
 
 on:
-  workflow_dispatch:  # Enable manual trigger
+  workflow_dispatch:
+    inputs:
+      sync_all:
+        description: 'Sync all epic and story files (ignore git diff)'
+        required: false
+        type: boolean
+        default: false  # Enable manual trigger
   push:
     branches: [main]
     paths:
@@ -28,22 +34,31 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Changed Files and Author
-        id: changed
+        id: changes
         run: |
-          CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '_bmad-output/planning-artifacts/(epics|stories)/.*\.md$' | tr '\n' ' ' || echo "")
+          if [ "${{ github.event.inputs.sync_all }}" == "true" ]; then
+            echo "Sync all mode - finding all epic and story files"
+            CHANGED=$(find _bmad-output/planning-artifacts/epics -type f -name "*.md" | tr '\n' ' ')
+          else
+            echo "Git diff mode - finding changed files only"
+            CHANGED=$(git diff --name-only HEAD^ HEAD 2>/dev/null | grep -E '_bmad-output/planning-artifacts/(epics|stories)/.*\.md$' | tr '\n' ' ' || echo "")
+          fi
+          echo "changed=$CHANGED" >> $GITHUB_OUTPUT
+          
           AUTHOR_EMAIL=$(git log -1 --pretty=format:'%ae')
-          echo "files=$CHANGED" >> $GITHUB_OUTPUT
-          echo "author_email=$AUTHOR_EMAIL" >> $GITHUB_OUTPUT
-          echo "Found: $CHANGED | Author: $AUTHOR_EMAIL"
+          echo "author=$AUTHOR_EMAIL" >> $GITHUB_OUTPUT
+          
+          echo "Files to sync: $CHANGED"
+          echo "Author: $AUTHOR_EMAIL"
 
       - name: Sync to ClickUp
-        if: steps.changed.outputs.files != ''
+        if: steps.changes.outputs.changed != ''
         env:
           CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
           EPICS_LIST: ${{ env.CLICKUP_EPICS_LIST_ID }}
           STORIES_LIST: ${{ env.CLICKUP_STORIES_LIST_ID }}
           EMAIL_MAP: ${{ env.EMAIL_TO_CLICKUP_ID }}
-          COMMIT_AUTHOR: ${{ steps.changed.outputs.author_email }}
+          AUTHOR: ${{ steps.changes.outputs.author }}
         run: |
           echo "Starting sync..."
           
@@ -81,7 +96,7 @@ jobs:
           
           get_epic_cu() { echo "$EPIC_MAP" | tr ',' '\n' | grep "^$1:" | cut -d':' -f2 | head -1; }
           
-          for file in ${{ steps.changed.outputs.files }}; do
+          for file in ${{ steps.changes.outputs.changed }}; do
             echo "== Processing: $file =="
             
             FM=$(sed -n '2,/^---$/p' "$file" | head -n -1)
@@ -195,7 +210,7 @@ jobs:
           echo "Sync complete"
 
       - name: Commit ClickUp IDs
-        if: steps.changed.outputs.files != ''
+        if: steps.changes.outputs.changed != ''
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
@@ -203,13 +218,13 @@ jobs:
           git diff --staged --quiet || { git commit -m "chore: Update ClickUp IDs [skip ci]" && git push; }
 
       - name: Sync Comments to ClickUp Activity
-        if: steps.changed.outputs.files != ''
+        if: steps.changes.outputs.changed != ''
         env:
           CLICKUP_API_KEY: ${{ secrets.CLICKUP_API_KEY }}
         run: |
           echo "Syncing comments to ClickUp Activity..."
           
-          for file in ${{ steps.changed.outputs.files }}; do
+          for file in ${{ steps.changes.outputs.changed }}; do
             # Get ClickUp task ID
             CU_ID=$(grep "^clickup_task_id:" "$file" | sed 's/^clickup_task_id: *//' | sed 's/^"//;s/"$//' | tr -d '\r')
             [ -z "$CU_ID" ] || [ "$CU_ID" = "null" ] && continue
