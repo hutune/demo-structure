@@ -1,59 +1,78 @@
 ---
-id: "EPIC-004"
-title: "Device Integration & Playback"
+id: "EPIC-04"
+title: "Device Management"
 status: "to-do"
-priority: "critical"
+priority: "high"
 assigned_to: null
-tags: ["epic", "backend", "device", "playback", "heartbeat"]
+tags: ["epic", "device", "hardware", "iot"]
 start_date: null
 due_date: null
-clickup_task_id: "86ewgdu15"
+clickup_task_id: null
+business_rule_ref: "04-device.md"
 ---
 
-# Device Integration & Playback
+# Epic 04: Device Management
 
 ## Overview
 
-Xây dựng Device Service để xử lý heartbeat, playback logs, và proof-of-play. Đây là core service để tracking thiết bị và ghi nhận impressions cho billing.
+This epic covers all device-related functionality including device types and specifications, lifecycle management, provisioning, heartbeat monitoring, health scoring, and content synchronization. Devices are the physical digital screens deployed in retail locations.
+
+## Business Value
+
+- Enable efficient device provisioning and deployment
+- Ensure high uptime through proactive monitoring
+- Maintain content synchronization across all devices
+- Provide visibility into device health and performance
 
 ## Goals
 
-- Implement Device Heartbeat System
-- Implement Playback Log Ingestion
-- Implement Proof-of-Play Generation
-- Implement Device Playlist Sync
+- Support multiple device types and specifications
+- Implement complete device lifecycle management
+- Enable automated health monitoring and alerting
+- Ensure reliable content synchronization
 
 ## User Stories
 
 | ID | Title | Status | Assignee |
 |----|-------|--------|----------|
-| STORY-4.1 | Device Heartbeat System | to-do | - |
-| STORY-4.2 | Playback Log Ingestion | to-do | - |
-| STORY-4.3 | Proof-of-Play Generation | to-do | - |
-| STORY-4.4 | Device Playlist Sync | to-do | - |
+| STORY-4.1 | Device Types & Specifications | to-do | - |
+| STORY-4.2 | Device Lifecycle Management | to-do | - |
+| STORY-4.3 | Device Provisioning | to-do | - |
+| STORY-4.4 | Heartbeat & Monitoring | to-do | - |
+| STORY-4.5 | Device Health Scoring | to-do | - |
+| STORY-4.6 | Content Synchronization | to-do | - |
 
 ## Success Metrics
 
-- Heartbeat latency < 100ms
-- Playback logs ingestion > 10,000 logs/second
-- Device online detection trong < 2 phút
-- Proof-of-play accuracy 100%
+- Device uptime > 99%
+- Average provisioning time < 15 minutes
+- Content sync success rate > 99.5%
+- Critical alerts response time < 30 minutes
 
 ## Dependencies
 
-- EPIC-001: Project Foundation & Authentication
-- EPIC-003: Supplier & Store Management
+- Epic-03: Supplier & Store Management
+- IoT connectivity infrastructure
+- Content delivery network (CDN)
 
-## Tech Stack
+## Technical Notes
 
-- Golang
-- Kafka
-- MongoDB/ClickHouse (NoSQL for logs)
-- PostgreSQL
+### Device Health Score Components
+| Factor | Weight |
+|--------|--------|
+| Connectivity | 30% |
+| Temperature | 20% |
+| Storage | 15% |
+| Content Freshness | 25% |
+| Display Quality | 10% |
+
+## Reference Documents
+
+- [04-device.md](../../../../docs/_rmn-arms-docs/business-rules%20(en%20ver)/04-device.md)
 
 ## Updates
 
-<!--
+<!-- 
 Progress updates will be added here.
 Format: **YYYY-MM-DD** - Status update
 -->
